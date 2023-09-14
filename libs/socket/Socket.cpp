@@ -42,6 +42,13 @@ void Socket::open(AddressFamily addressFamily, Socket::Type type, Socket::Protoc
 
 Socket& Socket::operator=(Socket&& other) noexcept
 {
+	close();
+	socketDescriptor = other.socketDescriptor;
+	addressFamily = other.addressFamily;
+	type = other.type;
+
+	other.socketDescriptor = Socket::invalidSocket;
+
 	return *this;
 }
 
@@ -67,6 +74,7 @@ void SocketAddress::setAddress(const std::string& address, AddressFamily address
 		throw std::runtime_error("Invalid Address Family for setting the socket's address. You have to use IPv4 or IPv6");
 	}
 
+	addressString = address;
 	inet_pton(static_cast<int>(addressFamily), address.c_str(), &this->address);
 }
 
@@ -78,4 +86,20 @@ const std::string& SocketAddress::getAddress() const
 IN_ADDR SocketAddress::getAddressRaw() const
 {
 	return address;
+}
+
+sockaddr_in SocketAddress::generateSocketAddressIn() const
+{
+	sockaddr_in addr;
+	addr.sin_family = AF_INET;
+	addr.sin_port = port;
+	addr.sin_addr = address;
+
+	return addr;
+}
+
+SocketAddress::SocketAddress(const std::string& address, USHORT port, AddressFamily addressFamily)
+{
+	setPort(port);
+	setAddress(address, addressFamily);
 }

@@ -41,12 +41,15 @@ enum class AddressFamily
 class SocketAddress
 {
 public:
+	__declspec(dllexport) SocketAddress(const std::string& address, USHORT port, AddressFamily addressFamily);
+
 	__declspec(dllexport) void setPort(USHORT port);
 	_NODISCARD __declspec(dllexport) USHORT getPort() const;
 
 	__declspec(dllexport) void setAddress(const std::string& address, AddressFamily addressFamily);
 	_NODISCARD __declspec(dllexport) const std::string& getAddress() const;
 	_NODISCARD __declspec(dllexport) IN_ADDR getAddressRaw() const;
+	_NODISCARD __declspec(dllexport) sockaddr_in generateSocketAddressIn() const;
 private:
 	USHORT port = 0;
 	IN_ADDR address{};
@@ -89,7 +92,7 @@ public:
 	__declspec(dllexport) void open(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
 	__declspec(dllexport) void close();
 
-private:
+protected:
 	SOCKET socketDescriptor = Socket::invalidSocket;
 	AddressFamily addressFamily = AddressFamily::Inet;
 	Type type = Type::Stream;
