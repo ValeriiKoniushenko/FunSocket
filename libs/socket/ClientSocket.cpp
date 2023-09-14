@@ -79,11 +79,37 @@ void ClientSocket::send(const std::vector<char>& data)
 {
 	if (!isConnected())
 	{
-		throw std::runtime_error("Can't send a data to NULL address. Set up a socket and try again");
+		throw std::runtime_error("Can't send data to NULL address. Set up a socket and try again");
 	}
 
 	::send(socketDescriptor, data.data(), data.size() * sizeof(char), 0);
 	Wsa::instance().requireNoErrors();
+}
+
+std::string ClientSocket::receiveAsString()
+{
+	if (!isConnected())
+	{
+		throw std::runtime_error("Can't receive data from NULL address. Set up a socket and try again");
+	}
+
+	std::string data;
+	const std::size_t size = 2048;
+	char buff[size]{};
+
+	while(1)
+	{
+		memset(buff, 0, size * sizeof(char));
+		int len = recv (socketDescriptor, buff, size, 0);
+		Wsa::instance().requireNoErrors();
+		if ( (len == SOCKET_ERROR) || (len == 0) )
+		{
+			break;
+		}
+		data += buff;
+	}
+
+	return data;
 }
 
 ClientSocketBridge::ClientSocketBridge(ClientSocket& clientSocket) : clientSocket(clientSocket)

@@ -22,6 +22,8 @@ public:
 	__declspec(dllexport) void send(const std::string& data);
 	__declspec(dllexport) void send(const std::vector<char>& data);
 
+	__declspec(dllexport) std::string receiveAsString();
+
 private:
 	sockaddr_in connectedAddress;
 	bool isConnected_ = false;

@@ -16,7 +16,7 @@ int main()
 		std::cout << "Connected client: " << connectedClient.getAddress().getAddress() << ":"
 				  << connectedClient.getAddress().getPort() << std::endl;
 
-		connectedClient.send("HTTP/1.0\r\nContent-length: 11\r\n\r\nHello world");
+		std::cout << connectedClient.receiveAsString();
 	}
 	catch (std::runtime_error& error)
 	{
