@@ -31,3 +31,9 @@ void ServerSocket::close()
 
 	boundAddress.reset();
 }
+
+void ServerSocket::listen(int maxConnectionsCount)
+{
+	::listen(socketDescriptor, maxConnectionsCount);
+	Wsa::instance().requireNoErrors();
+}

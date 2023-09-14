@@ -12,6 +12,7 @@ public:
 	__declspec(dllexport) void bind(const SocketAddress& socketAddress);
 	_NODISCARD __declspec(dllexport) bool isBound() const;
 	__declspec(dllexport) void close() override;
+	__declspec(dllexport) void listen(int maxConnectionsCount = SOMAXCONN);
 
 private:
 	std::optional<sockaddr_in> boundAddress{};

@@ -93,6 +93,7 @@ IN_ADDR SocketAddress::getAddressRaw() const
 sockaddr_in SocketAddress::generateSocketAddressIn() const
 {
 	sockaddr_in addr;
+	ZeroMemory(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = port;
 	addr.sin_addr = address;

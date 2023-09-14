@@ -11,7 +11,7 @@ int main()
 		ServerSocket listener;
 		listener.open(AddressFamily::Inet, Socket::Type::Stream);
 		listener.bind({"127.0.0.1", 27080, AddressFamily::Inet});
-		listener.;
+		listener.listen();
 
 	}
 	catch (std::runtime_error& error)
