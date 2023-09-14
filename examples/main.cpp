@@ -8,8 +8,7 @@ int main()
 	try
 	{
 		Wsa::instance().initialize(1, 1);
-		ServerSocket listener;
-		listener.open(AddressFamily::Inet, Socket::Type::Stream);
+		ServerSocket listener(AddressFamily::Inet, Socket::Type::Stream);
 		listener.bind({"127.0.0.1", 27080, AddressFamily::Inet});
 		listener.listen();
 
@@ -17,6 +16,7 @@ int main()
 		std::cout << "Connected client: " << connectedClient.getAddress().getAddress() << ":"
 				  << connectedClient.getAddress().getPort() << std::endl;
 
+		connectedClient.send("HTTP/1.0\r\nContent-length: 11\r\n\r\nHello world");
 	}
 	catch (std::runtime_error& error)
 	{

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Socket.h"
+
 #include <optional>
+#include <vector>
 
 class ClientSocket : public Socket
 {
@@ -14,7 +16,11 @@ public:
 	__declspec(dllexport) void close() override;
 	_NODISCARD __declspec(dllexport) bool isConnected() const;
 	_NODISCARD __declspec(dllexport) SocketAddress getAddress() const;
+	__declspec(dllexport) void connect();
+	__declspec(dllexport) void connectTo(const SocketAddress& socketAddress);
 
+	__declspec(dllexport) void send(const std::string& data);
+	__declspec(dllexport) void send(const std::vector<char>& data);
 
 private:
 	sockaddr_in connectedAddress;

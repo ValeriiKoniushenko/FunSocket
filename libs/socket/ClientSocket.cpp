@@ -1,4 +1,7 @@
 #include "ClientSocket.h"
+
+#include "Wsa.h"
+
 #include <stdexcept>
 
 ClientSocket::ClientSocket(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol)
@@ -46,6 +49,41 @@ SocketAddress ClientSocket::getAddress() const
 	SocketAddress socketAddress;
 	socketAddress.fromSockaddrIn(connectedAddress);
 	return socketAddress;
+}
+
+void ClientSocket::connect()
+{
+	::connect(socketDescriptor, reinterpret_cast<sockaddr*>(&connectedAddress), sizeof(connectedAddress));
+	Wsa::instance().requireNoErrors();
+	isConnected_ = true;
+}
+
+void ClientSocket::connectTo(const SocketAddress& socketAddress)
+{
+	connectedAddress = socketAddress.generateSocketAddressIn();
+	connect();
+}
+
+void ClientSocket::send(const std::string& data)
+{
+	if (!isConnected())
+	{
+		throw std::runtime_error("Can't send a data to NULL address. Set up a socket and try again");
+	}
+
+	::send(socketDescriptor, data.c_str(), data.size() * sizeof(std::string::value_type), 0);
+	Wsa::instance().requireNoErrors();
+}
+
+void ClientSocket::send(const std::vector<char>& data)
+{
+	if (!isConnected())
+	{
+		throw std::runtime_error("Can't send a data to NULL address. Set up a socket and try again");
+	}
+
+	::send(socketDescriptor, data.data(), data.size() * sizeof(char), 0);
+	Wsa::instance().requireNoErrors();
 }
 
 ClientSocketBridge::ClientSocketBridge(ClientSocket& clientSocket) : clientSocket(clientSocket)
