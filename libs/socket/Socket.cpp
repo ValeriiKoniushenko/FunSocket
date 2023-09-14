@@ -106,3 +106,13 @@ SocketAddress::SocketAddress(const std::string& address, USHORT port, AddressFam
 	setPort(port);
 	setAddress(address, addressFamily);
 }
+
+void SocketAddress::fromSockaddrIn(const sockaddr_in& sockaddr)
+{
+	port = sockaddr.sin_port;
+	address = sockaddr.sin_addr;
+
+	char str[INET_ADDRSTRLEN]{};
+	inet_ntop(sockaddr.sin_family, &(sockaddr.sin_addr), str, INET_ADDRSTRLEN);
+	addressString = str;
+}

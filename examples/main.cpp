@@ -13,6 +13,10 @@ int main()
 		listener.bind({"127.0.0.1", 27080, AddressFamily::Inet});
 		listener.listen();
 
+		ClientSocket connectedClient = listener.accept();
+		std::cout << "Connected client: " << connectedClient.getAddress().getAddress() << ":"
+				  << connectedClient.getAddress().getPort() << std::endl;
+
 	}
 	catch (std::runtime_error& error)
 	{

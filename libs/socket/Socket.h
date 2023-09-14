@@ -1,7 +1,9 @@
 #pragma once
 
+#include "CopyableAndMoveable.h"
 #include "NotCopyableButMovable.h"
 #include "winsock2.h"
+
 #include <string>
 
 enum class AddressFamily
@@ -38,9 +40,10 @@ enum class AddressFamily
 	Netdes = AF_NETDES
 };
 
-class SocketAddress
+class SocketAddress : public Utils::CopyableAndMoveable
 {
 public:
+	__declspec(dllexport) SocketAddress() = default;
 	__declspec(dllexport) SocketAddress(const std::string& address, USHORT port, AddressFamily addressFamily);
 
 	__declspec(dllexport) void setPort(USHORT port);
@@ -50,6 +53,8 @@ public:
 	_NODISCARD __declspec(dllexport) const std::string& getAddress() const;
 	_NODISCARD __declspec(dllexport) IN_ADDR getAddressRaw() const;
 	_NODISCARD __declspec(dllexport) sockaddr_in generateSocketAddressIn() const;
+	__declspec(dllexport) void fromSockaddrIn(const sockaddr_in& sockaddr);
+
 private:
 	USHORT port = 0;
 	IN_ADDR address{};

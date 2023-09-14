@@ -37,3 +37,18 @@ void ServerSocket::listen(int maxConnectionsCount)
 	::listen(socketDescriptor, maxConnectionsCount);
 	Wsa::instance().requireNoErrors();
 }
+
+ClientSocket ServerSocket::accept() const
+{
+	sockaddr_in connectedAddress;
+	int new_len = sizeof(connectedAddress);
+	ZeroMemory(&connectedAddress, sizeof(connectedAddress));
+	SOCKET connectedSocket = ::accept(socketDescriptor, reinterpret_cast<sockaddr*>(&connectedAddress), &new_len);
+	Wsa::instance().requireNoErrors();
+
+	ClientSocket clientSocket;
+	ClientSocketBridge clientSocketBridge(clientSocket);
+	clientSocketBridge.fillUp(connectedSocket, connectedAddress);
+
+	return clientSocket;
+}
