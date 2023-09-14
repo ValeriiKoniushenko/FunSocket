@@ -89,8 +89,8 @@ public:
 	__declspec(dllexport) Socket() = default;
 	__declspec(dllexport) Socket(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
 	__declspec(dllexport) ~Socket() override;
-	__declspec(dllexport) Socket(Socket&& other) noexcept ;
-	__declspec(dllexport) Socket& operator=(Socket&& other) noexcept ;
+	__declspec(dllexport) Socket(Socket&& other) noexcept;
+	__declspec(dllexport) Socket& operator=(Socket&& other) noexcept;
 
 	_NODISCARD __declspec(dllexport) bool isValid() const;
 
