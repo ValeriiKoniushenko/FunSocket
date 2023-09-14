@@ -8,8 +8,10 @@ int main()
 	try
 	{
 		Wsa::instance().initialize(1, 1);
-		ServerSocket listener(AddressFamily::Inet, Socket::Type::Stream);
+		ServerSocket listener;
+		listener.open(AddressFamily::Inet, Socket::Type::Stream);
 		listener.bind({"127.0.0.1", 27080, AddressFamily::Inet});
+		listener.;
 
 	}
 	catch (std::runtime_error& error)

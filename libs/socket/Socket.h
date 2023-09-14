@@ -90,7 +90,7 @@ public:
 	_NODISCARD __declspec(dllexport) bool isValid() const;
 
 	__declspec(dllexport) void open(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
-	__declspec(dllexport) void close();
+	__declspec(dllexport) virtual void close();
 
 protected:
 	SOCKET socketDescriptor = Socket::invalidSocket;

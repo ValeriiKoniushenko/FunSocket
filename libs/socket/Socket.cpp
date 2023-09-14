@@ -28,6 +28,8 @@ Socket::Socket(AddressFamily addressFamily, Socket::Type type, Socket::Protocol 
 
 void Socket::open(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol/* = Protocol::Auto*/)
 {
+	close();
+
 	socketDescriptor = socket(
 			static_cast<int>(addressFamily),
 			static_cast<int>(type),
