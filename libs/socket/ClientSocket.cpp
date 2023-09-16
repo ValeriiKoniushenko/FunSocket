@@ -88,28 +88,60 @@ void ClientSocket::send(const std::vector<char>& data)
 
 std::string ClientSocket::receiveAsString()
 {
+	std::string string;
+	receiveTo([&string](const char* data, std::size_t size){
+			string += data;
+		});
+	return string;
+}
+
+std::vector<unsigned char> ClientSocket::receive()
+{
+	std::vector<unsigned char> byteArray;
+	receiveTo([&byteArray](const char* data, std::size_t size){
+			byteArray.insert(byteArray.end(), data, data + size);
+		});
+	return byteArray;
+}
+
+void ClientSocket::receiveTo(std::function<void(const char*, std::size_t)>&& callback)
+{
 	if (!isConnected())
 	{
 		throw std::runtime_error("Can't receive data from NULL address. Set up a socket and try again");
 	}
 
-	std::string data;
 	const std::size_t size = 2048;
 	char buff[size]{};
 
-	while(1)
+	fd_set fd;
+	u_long nbio = 1;
+	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
+
+	FD_ZERO(&fd);
+	FD_SET(socketDescriptor, &fd);
+	timeval tv { 0, 1 };
+
+	while(true)
 	{
-		memset(buff, 0, size * sizeof(char));
-		int len = recv (socketDescriptor, buff, size, 0);
-		Wsa::instance().requireNoErrors();
-		if ( (len == SOCKET_ERROR) || (len == 0) )
+		if (select(0, &fd, nullptr, nullptr, &tv) > 0)
+		{
+			int len = recv(socketDescriptor, buff, size, 0);
+			Wsa::instance().requireNoErrors();
+			if ((len == SOCKET_ERROR) || (len == 0))
+			{
+				break;
+			}
+			callback(buff, size);
+			memset(buff, 0, size * sizeof(char));
+		}
+		else
 		{
 			break;
 		}
-		data += buff;
 	}
 
-	return data;
+	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
 }
 
 ClientSocketBridge::ClientSocketBridge(ClientSocket& clientSocket) : clientSocket(clientSocket)

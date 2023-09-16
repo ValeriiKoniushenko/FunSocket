@@ -15,6 +15,7 @@ public:
 	__declspec(dllexport) void close() override;
 	__declspec(dllexport) void listen(int maxConnectionsCount = SOMAXCONN);
 	_NODISCARD __declspec(dllexport) ClientSocket accept() const;
+	_NODISCARD __declspec(dllexport) bool isCanAccept() const;
 
 private:
 	std::optional<sockaddr_in> boundAddress{};

@@ -40,7 +40,7 @@ void ServerSocket::listen(int maxConnectionsCount)
 
 ClientSocket ServerSocket::accept() const
 {
-	sockaddr_in connectedAddress;
+	sockaddr_in connectedAddress{};
 	int new_len = sizeof(connectedAddress);
 	ZeroMemory(&connectedAddress, sizeof(connectedAddress));
 	SOCKET connectedSocket = ::accept(socketDescriptor, reinterpret_cast<sockaddr*>(&connectedAddress), &new_len);
@@ -51,4 +51,17 @@ ClientSocket ServerSocket::accept() const
 	clientSocketBridge.fillUp(connectedSocket, connectedAddress);
 
 	return clientSocket;
+}
+
+bool ServerSocket::isCanAccept() const
+{
+	fd_set fd;
+	u_long nbio = 1;
+	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
+	FD_ZERO(&fd);
+	FD_SET(socketDescriptor, &fd);
+	timeval tv { 1, 0 };
+	const auto result = select(0, &fd, nullptr, nullptr, &tv) > 0;
+	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
+	return result;
 }

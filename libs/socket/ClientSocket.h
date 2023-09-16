@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <vector>
+#include <functional>
 
 class ClientSocket : public Socket
 {
@@ -23,6 +24,10 @@ public:
 	__declspec(dllexport) void send(const std::vector<char>& data);
 
 	__declspec(dllexport) std::string receiveAsString();
+	__declspec(dllexport) std::vector<unsigned char> receive();
+	__declspec(dllexport) void receiveTo(std::function<void(const char*, std::size_t)>&& callback);
+
+private:
 
 private:
 	sockaddr_in connectedAddress;
