@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Socket.h"
 #include "ClientSocket.h"
+#include "Socket.h"
+
 #include <optional>
 
 class ServerSocket : public Socket

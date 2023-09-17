@@ -1,5 +1,7 @@
 #include "Socket.h"
+
 #include "Wsa.h"
+
 #include <ws2tcpip.h>
 
 Socket::~Socket()
@@ -12,6 +14,11 @@ bool Socket::isValid() const
 	return socketDescriptor != Socket::invalidSocket;
 }
 
+SOCKET Socket::getSocket() const
+{
+	return socketDescriptor;
+}
+
 void Socket::close()
 {
 	if (isValid())
@@ -21,20 +28,16 @@ void Socket::close()
 	}
 }
 
-Socket::Socket(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol/* = Protocol::Auto*/)
+Socket::Socket(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol /* = Protocol::Auto*/)
 {
 	open(addressFamily, type, protocol);
 }
 
-void Socket::open(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol/* = Protocol::Auto*/)
+void Socket::open(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol /* = Protocol::Auto*/)
 {
 	close();
 
-	socketDescriptor = socket(
-			static_cast<int>(addressFamily),
-			static_cast<int>(type),
-			static_cast<int>(protocol)
-		);
+	socketDescriptor = socket(static_cast<int>(addressFamily), static_cast<int>(type), static_cast<int>(protocol));
 
 	if (socketDescriptor == Socket::invalidSocket)
 	{

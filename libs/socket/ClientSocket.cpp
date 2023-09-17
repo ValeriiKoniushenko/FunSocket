@@ -2,6 +2,8 @@
 
 #include "Wsa.h"
 
+#include <WS2tcpip.h>
+
 #include <stdexcept>
 
 ClientSocket::ClientSocket(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol)
@@ -51,17 +53,31 @@ SocketAddress ClientSocket::getAddress() const
 	return socketAddress;
 }
 
-void ClientSocket::connect()
+bool ClientSocket::connect()
 {
 	::connect(socketDescriptor, reinterpret_cast<sockaddr*>(&connectedAddress), sizeof(connectedAddress));
 	Wsa::instance().requireNoErrors();
-	isConnected_ = true;
+
+	fd_set fd;
+	u_long nbio = 1;
+	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
+
+	FD_ZERO(&fd);
+	FD_SET(socketDescriptor, &fd);
+	timeval tv{60, 1};
+
+	const bool isWritable = select(0, nullptr, &fd, nullptr, &tv) > 0;
+
+	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
+	isConnected_ = isWritable;
+
+	return isWritable;
 }
 
-void ClientSocket::connectTo(const SocketAddress& socketAddress)
+bool ClientSocket::connectTo(const SocketAddress& socketAddress)
 {
 	connectedAddress = socketAddress.generateSocketAddressIn();
-	connect();
+	return connect();
 }
 
 void ClientSocket::send(const std::string& data)
@@ -71,8 +87,10 @@ void ClientSocket::send(const std::string& data)
 		throw std::runtime_error("Can't send a data to NULL address. Set up a socket and try again");
 	}
 
-	::send(socketDescriptor, data.c_str(), data.size() * sizeof(std::string::value_type), 0);
-	Wsa::instance().requireNoErrors();
+	if (SOCKET_ERROR == ::send(socketDescriptor, data.c_str(), data.size() * sizeof(std::string::value_type), 0))
+	{
+		Wsa::instance().requireNoErrors();
+	}
 }
 
 void ClientSocket::send(const std::vector<char>& data)
@@ -89,18 +107,14 @@ void ClientSocket::send(const std::vector<char>& data)
 std::string ClientSocket::receiveAsString()
 {
 	std::string string;
-	receiveTo([&string](const char* data, std::size_t size){
-			string += data;
-		});
+	receiveTo([&string](const char* data, std::size_t size) { string += data; });
 	return string;
 }
 
 std::vector<unsigned char> ClientSocket::receive()
 {
 	std::vector<unsigned char> byteArray;
-	receiveTo([&byteArray](const char* data, std::size_t size){
-			byteArray.insert(byteArray.end(), data, data + size);
-		});
+	receiveTo([&byteArray](const char* data, std::size_t size) { byteArray.insert(byteArray.end(), data, data + size); });
 	return byteArray;
 }
 
@@ -111,7 +125,7 @@ void ClientSocket::receiveTo(std::function<void(const char*, std::size_t)>&& cal
 		throw std::runtime_error("Can't receive data from NULL address. Set up a socket and try again");
 	}
 
-	const std::size_t size = 2048;
+	const std::size_t size = 1024;
 	char buff[size]{};
 
 	fd_set fd;
@@ -120,9 +134,9 @@ void ClientSocket::receiveTo(std::function<void(const char*, std::size_t)>&& cal
 
 	FD_ZERO(&fd);
 	FD_SET(socketDescriptor, &fd);
-	timeval tv { 0, 1 };
+	timeval tv{60, 0};
 
-	while(true)
+	while (true)
 	{
 		if (select(0, &fd, nullptr, nullptr, &tv) > 0)
 		{
@@ -144,15 +158,37 @@ void ClientSocket::receiveTo(std::function<void(const char*, std::size_t)>&& cal
 	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
 }
 
+bool ClientSocket::connectByHostName(const std::string& address, short port)
+{
+	hostent* hn = gethostbyname(address.c_str());
+	if (!hn)
+	{
+		throw std::runtime_error("Can't process the host name");
+	}
+
+	ZeroMemory(&connectedAddress, sizeof(connectedAddress));
+	connectedAddress.sin_family = AF_INET;
+	connectedAddress.sin_addr.S_un.S_addr = *reinterpret_cast<DWORD*>(hn->h_addr_list[0]);
+	connectedAddress.sin_port = htons(port);
+
+	if (SOCKET_ERROR == (::connect(socketDescriptor, reinterpret_cast<sockaddr*>(&connectedAddress), sizeof(connectedAddress))))
+	{
+		return false;
+	}
+	isConnected_ = true;
+	return true;
+}
+
 ClientSocketBridge::ClientSocketBridge(ClientSocket& clientSocket) : clientSocket(clientSocket)
 {
-
 }
 
 void ClientSocketBridge::fillUp(SOCKET socket, const sockaddr_in& address)
 {
 	if (socket == Socket::invalidSocket)
+	{
 		throw std::runtime_error("You try to create a client using an invalid socket descriptor");
+	}
 
 	clientSocket.socketDescriptor = socket;
 	clientSocket.connectedAddress = address;

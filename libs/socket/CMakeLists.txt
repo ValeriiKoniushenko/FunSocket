@@ -10,4 +10,4 @@ target_include_directories(Socket PUBLIC .)
 
 target_link_libraries(Socket PUBLIC
 	WSA
-)
+	)

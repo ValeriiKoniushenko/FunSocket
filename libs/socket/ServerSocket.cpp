@@ -1,8 +1,8 @@
 #include "ServerSocket.h"
+
 #include "Wsa.h"
 
-ServerSocket::ServerSocket(AddressFamily addressFamily, Type type, Protocol protocol) :
-	Socket(addressFamily, type, protocol)
+ServerSocket::ServerSocket(AddressFamily addressFamily, Type type, Protocol protocol) : Socket(addressFamily, type, protocol)
 {
 }
 
@@ -60,7 +60,7 @@ bool ServerSocket::isCanAccept() const
 	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
 	FD_ZERO(&fd);
 	FD_SET(socketDescriptor, &fd);
-	timeval tv { 1, 0 };
+	timeval tv{60, 1};
 	const auto result = select(0, &fd, nullptr, nullptr, &tv) > 0;
 	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
 	return result;

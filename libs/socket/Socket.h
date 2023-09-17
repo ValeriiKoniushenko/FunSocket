@@ -44,7 +44,7 @@ class SocketAddress : public Utils::CopyableAndMoveable
 {
 public:
 	__declspec(dllexport) SocketAddress() = default;
-	__declspec(dllexport) SocketAddress(const std::string& address, USHORT port, AddressFamily addressFamily);
+	__declspec(dllexport) SocketAddress(const std::string& address, USHORT port, AddressFamily addressFamily = AddressFamily::Inet);
 
 	__declspec(dllexport) void setPort(USHORT port);
 	_NODISCARD __declspec(dllexport) USHORT getPort() const;
@@ -89,16 +89,18 @@ public:
 	__declspec(dllexport) Socket() = default;
 	__declspec(dllexport) Socket(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
 	__declspec(dllexport) ~Socket() override;
-	__declspec(dllexport) Socket(Socket&& other) noexcept ;
+	__declspec(dllexport) Socket(Socket&& other) noexcept;
 	__declspec(dllexport) Socket& operator=(Socket&& other) noexcept;
 
 	_NODISCARD __declspec(dllexport) bool isValid() const;
+	_NODISCARD __declspec(dllexport) SOCKET getSocket() const;
 
 	__declspec(dllexport) void open(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
 	__declspec(dllexport) virtual void close();
 
-protected:
 	SOCKET socketDescriptor = Socket::invalidSocket;
+
+protected:
 	AddressFamily addressFamily = AddressFamily::Inet;
 	Type type = Type::Stream;
 };
