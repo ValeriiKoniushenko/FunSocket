@@ -77,6 +77,12 @@ bool ClientSocket::connect()
 
 bool ClientSocket::connectTo(const SocketAddress& socketAddress)
 {
+	if (type == Type::Dgram)
+	{
+		throw std::runtime_error(
+			"You can't use function 'connectTo' with Dgram protocol.");
+	}
+
 	connectedAddress = socketAddress.generateSocketAddressIn();
 	return connect();
 }

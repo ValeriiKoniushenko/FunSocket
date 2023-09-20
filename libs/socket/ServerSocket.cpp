@@ -34,12 +34,24 @@ void ServerSocket::close()
 
 void ServerSocket::listen(int maxConnectionsCount)
 {
+	if (type == Type::Dgram)
+	{
+		throw std::runtime_error(
+			"You can't use function 'listen' with Dgram protocol.");
+	}
+
 	::listen(socketDescriptor, maxConnectionsCount);
 	Wsa::instance().requireNoErrors();
 }
 
 ClientSocket ServerSocket::accept() const
 {
+	if (type == Type::Dgram)
+	{
+		throw std::runtime_error(
+			"You can't use function 'accept' with Dgram protocol.");
+	}
+
 	sockaddr_in connectedAddress{};
 	int new_len = sizeof(connectedAddress);
 	ZeroMemory(&connectedAddress, sizeof(connectedAddress));
