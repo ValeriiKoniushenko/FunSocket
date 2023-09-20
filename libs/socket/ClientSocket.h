@@ -24,9 +24,9 @@ public:
 	__declspec(dllexport) void send(const std::string& data);
 	__declspec(dllexport) void send(const std::vector<char>& data);
 
-	__declspec(dllexport) std::string receiveAsString();
-	__declspec(dllexport) std::vector<unsigned char> receive();
-	__declspec(dllexport) void receiveTo(std::function<void(const char*, std::size_t)>&& callback);
+	__declspec(dllexport) std::string receiveAsString(std::size_t receiveSize);
+	__declspec(dllexport) std::vector<char> receive(std::size_t receiveSize);
+	__declspec(dllexport) void receiveTo(std::size_t receiveSize, std::function<void(const char*, std::size_t)>&& callback);
 
 private:
 	sockaddr_in connectedAddress;
@@ -38,7 +38,7 @@ class ClientSocketBridge
 {
 public:
 	__declspec(dllexport) explicit ClientSocketBridge(ClientSocket& clientSocket);
-	__declspec(dllexport) void fillUp(SOCKET socket, const sockaddr_in& address);
+	__declspec(dllexport) void fillUp(SOCKET socket, const sockaddr_in& address, Socket::Type type);
 
 private:
 	ClientSocket& clientSocket;

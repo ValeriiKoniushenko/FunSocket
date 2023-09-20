@@ -67,6 +67,7 @@ class Socket : public Utils::NotCopyableButMovable
 public:
 	enum class Type
 	{
+		None,
 		Stream = SOCK_STREAM,
 		Dgram = SOCK_DGRAM,
 		Raw = SOCK_RAW,
@@ -98,9 +99,10 @@ public:
 	__declspec(dllexport) void open(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
 	__declspec(dllexport) virtual void close();
 
-	SOCKET socketDescriptor = Socket::invalidSocket;
+	_NODISCARD __declspec(dllexport) Type getType() const;
 
 protected:
+	SOCKET socketDescriptor = Socket::invalidSocket;
 	AddressFamily addressFamily = AddressFamily::Inet;
-	Type type = Type::Stream;
+	Type type = Type::None;
 };

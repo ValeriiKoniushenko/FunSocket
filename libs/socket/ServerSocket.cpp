@@ -48,7 +48,7 @@ ClientSocket ServerSocket::accept() const
 
 	ClientSocket clientSocket;
 	ClientSocketBridge clientSocketBridge(clientSocket);
-	clientSocketBridge.fillUp(connectedSocket, connectedAddress);
+	clientSocketBridge.fillUp(connectedSocket, connectedAddress, type);
 
 	return clientSocket;
 }
@@ -62,6 +62,7 @@ bool ServerSocket::isCanAccept() const
 	FD_SET(socketDescriptor, &fd);
 	timeval tv{60, 1};
 	const auto result = select(0, &fd, nullptr, nullptr, &tv) > 0;
+	nbio = 0;
 	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
 	return result;
 }

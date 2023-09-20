@@ -64,10 +64,11 @@ bool ClientSocket::connect()
 
 	FD_ZERO(&fd);
 	FD_SET(socketDescriptor, &fd);
-	timeval tv{60, 1};
+	timeval tv{60, 0};
 
 	const bool isWritable = select(0, nullptr, &fd, nullptr, &tv) > 0;
 
+	nbio = 0;
 	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
 	isConnected_ = isWritable;
 
@@ -87,7 +88,12 @@ void ClientSocket::send(const std::string& data)
 		throw std::runtime_error("Can't send a data to NULL address. Set up a socket and try again");
 	}
 
-	if (SOCKET_ERROR == ::send(socketDescriptor, data.c_str(), data.size() * sizeof(std::string::value_type), 0))
+	if (type == Type::Dgram)
+	{
+		throw std::runtime_error("Using Dgram protocol you can't use function 'send'. Use 'sendTo'.");
+	}
+
+	if (SOCKET_ERROR == ::send(socketDescriptor, data.c_str(), (data.size() + 1ull) * sizeof(std::string::value_type), 0))
 	{
 		Wsa::instance().requireNoErrors();
 	}
@@ -104,58 +110,38 @@ void ClientSocket::send(const std::vector<char>& data)
 	Wsa::instance().requireNoErrors();
 }
 
-std::string ClientSocket::receiveAsString()
+std::string ClientSocket::receiveAsString(std::size_t receiveSize)
 {
 	std::string string;
-	receiveTo([&string](const char* data, std::size_t size) { string += data; });
+	receiveTo(receiveSize, [&string](const char* data, std::size_t size) { string += data; });
 	return string;
 }
 
-std::vector<unsigned char> ClientSocket::receive()
+std::vector<char> ClientSocket::receive(std::size_t receiveSize)
 {
-	std::vector<unsigned char> byteArray;
-	receiveTo([&byteArray](const char* data, std::size_t size) { byteArray.insert(byteArray.end(), data, data + size); });
+	std::vector<char> byteArray;
+	receiveTo(
+		receiveSize, [&byteArray](const char* data, std::size_t size) { byteArray.insert(byteArray.end(), data, data + size); });
 	return byteArray;
 }
 
-void ClientSocket::receiveTo(std::function<void(const char*, std::size_t)>&& callback)
+void ClientSocket::receiveTo(std::size_t receiveSize, std::function<void(const char*, std::size_t)>&& callback)
 {
 	if (!isConnected())
 	{
 		throw std::runtime_error("Can't receive data from NULL address. Set up a socket and try again");
 	}
 
-	const std::size_t size = 1024;
-	char buff[size]{};
-
-	fd_set fd;
-	u_long nbio = 1;
-	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
-
-	FD_ZERO(&fd);
-	FD_SET(socketDescriptor, &fd);
-	timeval tv{60, 0};
-
-	while (true)
+	if (type == Type::Dgram)
 	{
-		if (select(0, &fd, nullptr, nullptr, &tv) > 0)
-		{
-			int len = recv(socketDescriptor, buff, size, 0);
-			Wsa::instance().requireNoErrors();
-			if ((len == SOCKET_ERROR) || (len == 0))
-			{
-				break;
-			}
-			callback(buff, size);
-			memset(buff, 0, size * sizeof(char));
-		}
-		else
-		{
-			break;
-		}
+		throw std::runtime_error(
+			"Using Dgram protocol you can't receive a data using the function 'receiveTo', use 'receiveFromTo'");
 	}
 
-	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
+	std::vector<char> buff(receiveSize);
+	recv(socketDescriptor, buff.data(), receiveSize, 0);
+	Wsa::instance().requireNoErrors();
+	callback(buff.data(), receiveSize);
 }
 
 bool ClientSocket::connectByHostName(const std::string& address, short port)
@@ -183,7 +169,7 @@ ClientSocketBridge::ClientSocketBridge(ClientSocket& clientSocket) : clientSocke
 {
 }
 
-void ClientSocketBridge::fillUp(SOCKET socket, const sockaddr_in& address)
+void ClientSocketBridge::fillUp(SOCKET socket, const sockaddr_in& address, Socket::Type type)
 {
 	if (socket == Socket::invalidSocket)
 	{
@@ -193,4 +179,5 @@ void ClientSocketBridge::fillUp(SOCKET socket, const sockaddr_in& address)
 	clientSocket.socketDescriptor = socket;
 	clientSocket.connectedAddress = address;
 	clientSocket.isConnected_ = true;
+	clientSocket.type = type;
 }

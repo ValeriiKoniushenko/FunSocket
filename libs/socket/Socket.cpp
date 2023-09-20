@@ -38,6 +38,7 @@ void Socket::open(AddressFamily addressFamily, Socket::Type type, Socket::Protoc
 	close();
 
 	socketDescriptor = socket(static_cast<int>(addressFamily), static_cast<int>(type), static_cast<int>(protocol));
+	this->type = type;
 
 	if (socketDescriptor == Socket::invalidSocket)
 	{
@@ -60,6 +61,11 @@ Socket& Socket::operator=(Socket&& other) noexcept
 Socket::Socket(Socket&& other) noexcept
 {
 	*this = std::move(other);
+}
+
+Socket::Type Socket::getType() const
+{
+	return type;
 }
 
 void SocketAddress::setPort(USHORT port)
