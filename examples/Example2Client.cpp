@@ -13,10 +13,8 @@ int main()
 
 		ClientSocket client;
 		client.open(AddressFamily::Inet, Socket::Type::Dgram);
-		client.connectTo({"127.0.0.1", 8088});
+		client.sendTo("Hello", {"127.0.0.1", 8088});
 
-		cout << "Response: " << client.receiveAsString(6) << endl;
-		client.send("World");
 		system("pause");
 	}
 	catch (std::runtime_error& error)

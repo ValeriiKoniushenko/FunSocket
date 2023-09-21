@@ -15,12 +15,20 @@ int main()
 		ServerSocket server;
 		server.open(AddressFamily::Inet, Socket::Type::Dgram);
 		server.bind(SocketAddress("127.0.0.1", 8088));
-		server.listen();
-		auto client = server.accept();
-		cout << "Connected client: " << client.getAddress().getAddress() << ":" << client.getAddress().getPort() << endl;
 
-		client.send("Hello");
-		cout << client.receiveAsString(6) << endl;
+		char buff[6]{};
+		sockaddr_in cliAddr{};
+		int cliAddrLen = sizeof(cliAddr);
+		auto readStatus = recvfrom(server.getSocket(), buff, 6, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
+		if (readStatus < 0)
+		{
+			perror("reading error...\n");
+			exit(-1);
+		}
+
+		cout.write(buff, readStatus);
+		cout << endl;
+
 		system("pause");
 	}
 	catch (std::runtime_error& error)

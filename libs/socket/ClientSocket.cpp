@@ -79,8 +79,7 @@ bool ClientSocket::connectTo(const SocketAddress& socketAddress)
 {
 	if (type == Type::Dgram)
 	{
-		throw std::runtime_error(
-			"You can't use function 'connectTo' with Dgram protocol.");
+		throw std::runtime_error("You can't use function 'connectTo' with Dgram protocol.");
 	}
 
 	connectedAddress = socketAddress.generateSocketAddressIn();
@@ -169,6 +168,14 @@ bool ClientSocket::connectByHostName(const std::string& address, short port)
 	}
 	isConnected_ = true;
 	return true;
+}
+
+void ClientSocket::sendTo(const std::string& data, const SocketAddress& socketAddress)
+{
+	auto s = socketAddress.generateSocketAddressIn();
+	::sendto(socketDescriptor, data.c_str(), (data.size() + 1ull) * sizeof(std::string::value_type), 0,
+		reinterpret_cast<sockaddr*>(&s), sizeof(s));
+	Wsa::instance().requireNoErrors();
 }
 
 ClientSocketBridge::ClientSocketBridge(ClientSocket& clientSocket) : clientSocket(clientSocket)

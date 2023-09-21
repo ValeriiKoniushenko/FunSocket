@@ -23,6 +23,7 @@ public:
 
 	__declspec(dllexport) void send(const std::string& data);
 	__declspec(dllexport) void send(const std::vector<char>& data);
+	__declspec(dllexport) void sendTo(const std::string& data, const SocketAddress& socketAddress);
 
 	__declspec(dllexport) std::string receiveAsString(std::size_t receiveSize);
 	__declspec(dllexport) std::vector<char> receive(std::size_t receiveSize);
