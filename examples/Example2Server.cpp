@@ -15,10 +15,11 @@ int main()
 		server.open(AddressFamily::Inet);
 		server.bind({"127.0.0.1", 8088});
 
-		auto result = server.receiveAsString(6);
-
+		auto result = server.receive(6);
 		std::string str(result.data.begin(), result.data.end());
 		cout << str << "\nFrom: " << result.client.getAddress() << ":" << result.client.getPort() << endl;
+
+		server.sendTo("World", result.client);
 
 		system("pause");
 	}

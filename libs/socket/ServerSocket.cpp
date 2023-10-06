@@ -92,11 +92,11 @@ void UDPServerSocket::open(AddressFamily addressFamily, Socket::Protocol protoco
 	Socket::open(addressFamily, Type::Dgram, protocol);
 }
 
-UDPServerSocket::Result UDPServerSocket::receiveAsString(std::size_t size)
+UDPServerSocket::Result UDPServerSocket::receive(std::size_t size)
 {
 	Result result;
 	result.data.resize(size);
-	
+
 	sockaddr_in cliAddr{};
 	int cliAddrLen = sizeof(cliAddr);
 
@@ -106,4 +106,17 @@ UDPServerSocket::Result UDPServerSocket::receiveAsString(std::size_t size)
 	result.client.fromSockaddrIn(cliAddr);
 
 	return result;
+}
+
+void UDPServerSocket::sendTo(const std::string& data, const SocketAddress& address)
+{
+	std::vector<char> temp(data.begin(), data.end());
+	sendTo(temp, address);
+}
+
+void UDPServerSocket::sendTo(const std::vector<char>& data, const SocketAddress& address)
+{
+	auto socketAddrIn = address.generateSocketAddressIn();
+	::sendto(socketDescriptor, data.data(), data.size(), 0, reinterpret_cast<sockaddr*>(&socketAddrIn), sizeof(socketAddrIn));
+	Wsa::instance().requireNoErrors();
 }

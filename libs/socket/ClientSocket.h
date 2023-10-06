@@ -49,9 +49,16 @@ private:
 class UDPClientSocket : public Socket
 {
 public:
+	struct Result
+	{
+		SocketAddress server;
+		std::vector<char> data;
+	};
+
 	__declspec(dllexport) UDPClientSocket() = default;
 	__declspec(dllexport) explicit UDPClientSocket(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
 	__declspec(dllexport) void sendTo(const std::string& message, const SocketAddress& socketAddress);
+	__declspec(dllexport) Result receive(std::size_t size);
 
 private:
 	friend class UDPClientSocketBridge;

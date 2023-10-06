@@ -204,3 +204,19 @@ void UDPClientSocket::sendTo(const std::string& message, const SocketAddress& so
 		reinterpret_cast<sockaddr*>(&s), sizeof(s));
 	Wsa::instance().requireNoErrors();
 }
+
+UDPClientSocket::Result UDPClientSocket::receive(std::size_t size)
+{
+	Result result;
+	result.data.resize(size);
+
+	sockaddr_in serverAddr{};
+	int serverAddrLen = sizeof(serverAddr);
+
+	::recvfrom(socketDescriptor, result.data.data(), size, 0, reinterpret_cast<sockaddr*>(&serverAddrLen), &serverAddrLen);
+	Wsa::instance().requireNoErrors();
+
+	result.server.fromSockaddrIn(serverAddr);
+
+	return result;
+}

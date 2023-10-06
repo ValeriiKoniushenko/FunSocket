@@ -38,5 +38,7 @@ public:
 	};
 
 	__declspec(dllexport) void open(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
-	__declspec(dllexport) Result receiveAsString(std::size_t size);
+	__declspec(dllexport) Result receive(std::size_t size);
+	__declspec(dllexport) void sendTo(const std::string& data, const SocketAddress& address);
+	__declspec(dllexport) void sendTo(const std::vector<char>& data, const SocketAddress& address);
 };
