@@ -21,9 +21,6 @@ int main()
 		client.send("Hello");
 		cout << client.receiveAsString(6) << endl;
 
-		client.send("Hello");
-		cout << client.receiveAsString(6) << endl;
-
 		system("pause");
 	}
 	catch (std::runtime_error& error)

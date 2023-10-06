@@ -18,9 +18,6 @@ int main()
 		cout << "Response: " << client.receiveAsString(6) << endl;
 		client.send("World");
 
-		cout << "Response: " << client.receiveAsString(6) << endl;
-		client.send("World");
-
 		system("pause");
 	}
 	catch (std::runtime_error& error)
