@@ -9,15 +9,34 @@ class ServerSocket : public Socket
 {
 public:
 	__declspec(dllexport) ServerSocket() = default;
-	__declspec(dllexport) ServerSocket(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
+	__declspec(dllexport) ServerSocket(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
 
 	__declspec(dllexport) void bind(const SocketAddress& socketAddress);
 	_NODISCARD __declspec(dllexport) bool isBound() const;
 	__declspec(dllexport) void close() override;
-	__declspec(dllexport) void listen(int maxConnectionsCount = SOMAXCONN);
-	_NODISCARD __declspec(dllexport) ClientSocket accept() const;
-	_NODISCARD __declspec(dllexport) bool isCanAccept() const;
 
 private:
 	std::optional<sockaddr_in> boundAddress{};
+};
+
+class TCPServerSocket : public ServerSocket
+{
+public:
+	__declspec(dllexport) void listen(int maxConnectionsCount = SOMAXCONN);
+	_NODISCARD __declspec(dllexport) TCPClientSocket accept() const;
+	_NODISCARD __declspec(dllexport) bool isCanAccept() const;
+	__declspec(dllexport) void open(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
+};
+
+class UDPServerSocket : public ServerSocket
+{
+public:
+	struct Result
+	{
+		SocketAddress client;
+		std::vector<char> data;
+	};
+
+	__declspec(dllexport) void open(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
+	__declspec(dllexport) Result receiveAsString(std::size_t size);
 };

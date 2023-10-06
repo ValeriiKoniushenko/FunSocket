@@ -6,18 +6,18 @@
 
 #include <stdexcept>
 
-ClientSocket::ClientSocket(AddressFamily addressFamily, Socket::Type type, Socket::Protocol protocol)
-	: Socket(addressFamily, type, protocol)
+TCPClientSocket::TCPClientSocket(AddressFamily addressFamily, Socket::Protocol protocol)
+	: Socket(addressFamily, Type::Stream, protocol)
 {
 	ZeroMemory(&connectedAddress, sizeof(connectedAddress));
 }
 
-ClientSocket::ClientSocket()
+TCPClientSocket::TCPClientSocket()
 {
 	ZeroMemory(&connectedAddress, sizeof(connectedAddress));
 }
 
-void ClientSocket::close()
+void TCPClientSocket::close()
 {
 	Socket::close();
 
@@ -25,12 +25,12 @@ void ClientSocket::close()
 	isConnected_ = false;
 }
 
-ClientSocket::ClientSocket(ClientSocket&& other) noexcept
+TCPClientSocket::TCPClientSocket(TCPClientSocket&& other) noexcept
 {
 	*this = std::move(other);
 }
 
-ClientSocket& ClientSocket::operator=(ClientSocket&& other) noexcept
+TCPClientSocket& TCPClientSocket::operator=(TCPClientSocket&& other) noexcept
 {
 	connectedAddress = other.connectedAddress;
 	isConnected_ = other.isConnected_;
@@ -41,19 +41,19 @@ ClientSocket& ClientSocket::operator=(ClientSocket&& other) noexcept
 	return *this;
 }
 
-bool ClientSocket::isConnected() const
+bool TCPClientSocket::isConnected() const
 {
 	return isConnected_;
 }
 
-SocketAddress ClientSocket::getAddress() const
+SocketAddress TCPClientSocket::getAddress() const
 {
 	SocketAddress socketAddress;
 	socketAddress.fromSockaddrIn(connectedAddress);
 	return socketAddress;
 }
 
-bool ClientSocket::connect()
+bool TCPClientSocket::connect()
 {
 	::connect(socketDescriptor, reinterpret_cast<sockaddr*>(&connectedAddress), sizeof(connectedAddress));
 	Wsa::instance().requireNoErrors();
@@ -75,7 +75,7 @@ bool ClientSocket::connect()
 	return isWritable;
 }
 
-bool ClientSocket::connectTo(const SocketAddress& socketAddress)
+bool TCPClientSocket::connectTo(const SocketAddress& socketAddress)
 {
 	if (type == Type::Dgram)
 	{
@@ -86,7 +86,7 @@ bool ClientSocket::connectTo(const SocketAddress& socketAddress)
 	return connect();
 }
 
-void ClientSocket::send(const std::string& data)
+void TCPClientSocket::send(const std::string& data)
 {
 	if (!isConnected())
 	{
@@ -104,7 +104,7 @@ void ClientSocket::send(const std::string& data)
 	}
 }
 
-void ClientSocket::send(const std::vector<char>& data)
+void TCPClientSocket::send(const std::vector<char>& data)
 {
 	if (!isConnected())
 	{
@@ -115,14 +115,19 @@ void ClientSocket::send(const std::vector<char>& data)
 	Wsa::instance().requireNoErrors();
 }
 
-std::string ClientSocket::receiveAsString(std::size_t receiveSize)
+void TCPClientSocket::open(AddressFamily addressFamily, Protocol protocol)
+{
+	Socket::open(addressFamily, Type::Stream, protocol);
+}
+
+std::string TCPClientSocket::receiveAsString(std::size_t receiveSize)
 {
 	std::string string;
 	receiveTo(receiveSize, [&string](const char* data, std::size_t size) { string += data; });
 	return string;
 }
 
-std::vector<char> ClientSocket::receive(std::size_t receiveSize)
+std::vector<char> TCPClientSocket::receive(std::size_t receiveSize)
 {
 	std::vector<char> byteArray;
 	receiveTo(
@@ -130,7 +135,7 @@ std::vector<char> ClientSocket::receive(std::size_t receiveSize)
 	return byteArray;
 }
 
-void ClientSocket::receiveTo(std::size_t receiveSize, std::function<void(const char*, std::size_t)>&& callback)
+void TCPClientSocket::receiveTo(std::size_t receiveSize, std::function<void(const char*, std::size_t)>&& callback)
 {
 	if (!isConnected())
 	{
@@ -149,7 +154,7 @@ void ClientSocket::receiveTo(std::size_t receiveSize, std::function<void(const c
 	callback(buff.data(), receiveSize);
 }
 
-bool ClientSocket::connectByHostName(const std::string& address, short port)
+bool TCPClientSocket::connectByHostName(const std::string& address, short port)
 {
 	hostent* hn = gethostbyname(address.c_str());
 	if (!hn)
@@ -170,19 +175,11 @@ bool ClientSocket::connectByHostName(const std::string& address, short port)
 	return true;
 }
 
-void ClientSocket::sendTo(const std::string& data, const SocketAddress& socketAddress)
-{
-	auto s = socketAddress.generateSocketAddressIn();
-	::sendto(socketDescriptor, data.c_str(), (data.size() + 1ull) * sizeof(std::string::value_type), 0,
-		reinterpret_cast<sockaddr*>(&s), sizeof(s));
-	Wsa::instance().requireNoErrors();
-}
-
-ClientSocketBridge::ClientSocketBridge(ClientSocket& clientSocket) : clientSocket(clientSocket)
+TCPClientSocketBridge::TCPClientSocketBridge(TCPClientSocket& TCPClientSocket) : clientSocket(TCPClientSocket)
 {
 }
 
-void ClientSocketBridge::fillUp(SOCKET socket, const sockaddr_in& address, Socket::Type type)
+void TCPClientSocketBridge::fillUp(SOCKET socket, const sockaddr_in& address)
 {
 	if (socket == Socket::invalidSocket)
 	{
@@ -192,5 +189,18 @@ void ClientSocketBridge::fillUp(SOCKET socket, const sockaddr_in& address, Socke
 	clientSocket.socketDescriptor = socket;
 	clientSocket.connectedAddress = address;
 	clientSocket.isConnected_ = true;
-	clientSocket.type = type;
+	clientSocket.type = Socket::Type::Stream;
+}
+
+UDPClientSocket::UDPClientSocket(AddressFamily addressFamily, Socket::Protocol protocol)
+	: Socket(addressFamily, Type::Dgram, protocol)
+{
+}
+
+void UDPClientSocket::sendTo(const std::string& message, const SocketAddress& socketAddress)
+{
+	auto s = socketAddress.generateSocketAddressIn();
+	::sendto(socketDescriptor, message.c_str(), (message.size() + 1) * sizeof(std::string::value_type), 0,
+		reinterpret_cast<sockaddr*>(&s), sizeof(s));
+	Wsa::instance().requireNoErrors();
 }

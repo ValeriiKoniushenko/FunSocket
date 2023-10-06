@@ -8,36 +8,9 @@
 
 enum class AddressFamily
 {
-	Unspec = AF_UNSPEC,
-	Unix = AF_UNIX,
+	None,
 	Inet = AF_INET,
-	Implink = AF_IMPLINK,
-	Pup = AF_PUP,
-	Chaos = AF_CHAOS,
-	Ns = AF_NS,
-	Ipx = AF_IPX,
-	Iso = AF_ISO,
-	Osi = AF_OSI,
-	Ecma = AF_ECMA,
-	Datakit = AF_DATAKIT,
-	Ccitt = AF_CCITT,
-	Sna = AF_SNA,
-	Decnet = AF_DECnet,
-	Dli = AF_DLI,
-	Lat = AF_LAT,
-	Hylink = AF_HYLINK,
-	Appletalk = AF_APPLETALK,
-	Netbios = AF_NETBIOS,
-	Voiceview = AF_VOICEVIEW,
-	Firefox = AF_FIREFOX,
-	Unknown1 = AF_UNKNOWN1,
-	Ban = AF_BAN,
-	Atm = AF_ATM,
 	Inet6 = AF_INET6,
-	Cluster = AF_CLUSTER,
-	AF12844 = AF_12844,
-	Irda = AF_IRDA,
-	Netdes = AF_NETDES
 };
 
 class SocketAddress : public Utils::CopyableAndMoveable
@@ -70,19 +43,13 @@ public:
 		None,
 		Stream = SOCK_STREAM,
 		Dgram = SOCK_DGRAM,
-		Raw = SOCK_RAW,
-		Rdm = SOCK_RDM,
-		Seqpacket = SOCK_SEQPACKET,
 	};
 
 	enum class Protocol
 	{
 		Auto = 0,
-		Icmp = IPPROTO_ICMP,
-		Igmp = IPPROTO_IGMP,
 		Tcp = IPPROTO_TCP,
 		Udp = IPPROTO_UDP,
-		Icmpv6 = IPPROTO_ICMPV6
 	};
 
 	inline static SOCKET invalidSocket = INVALID_SOCKET;
@@ -101,6 +68,7 @@ public:
 
 	_NODISCARD __declspec(dllexport) Type getType() const;
 
+	_NODISCARD __declspec(dllexport) SocketAddress getOwnAddress() const;
 protected:
 	SOCKET socketDescriptor = Socket::invalidSocket;
 	AddressFamily addressFamily = AddressFamily::Inet;

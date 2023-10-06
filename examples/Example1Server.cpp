@@ -12,11 +12,18 @@ int main()
 	{
 		Wsa::instance().initialize(1, 1);
 
-		ServerSocket server;
-		server.open(AddressFamily::Inet, Socket::Type::Stream);
+		TCPServerSocket server;
+		server.open(AddressFamily::Inet);
 		server.bind(SocketAddress("127.0.0.1", 8088));
 		server.listen();
-		
+		auto client = server.accept();
+
+		client.send("Hello");
+		cout << client.receiveAsString(6) << endl;
+
+		client.send("Hello");
+		cout << client.receiveAsString(6) << endl;
+
 		system("pause");
 	}
 	catch (std::runtime_error& error)

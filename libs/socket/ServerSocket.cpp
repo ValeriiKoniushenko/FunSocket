@@ -2,12 +2,17 @@
 
 #include "Wsa.h"
 
-ServerSocket::ServerSocket(AddressFamily addressFamily, Type type, Protocol protocol) : Socket(addressFamily, type, protocol)
+ServerSocket::ServerSocket(AddressFamily addressFamily, Protocol protocol) : Socket(addressFamily, Type::Stream, protocol)
 {
 }
 
 void ServerSocket::bind(const SocketAddress& socketAddress)
 {
+	if (!isValid())
+	{
+		throw std::runtime_error("The socket wasn't opened");
+	}
+
 	if (isBound())
 	{
 		throw std::runtime_error("The socket already was bound.");
@@ -32,24 +37,22 @@ void ServerSocket::close()
 	boundAddress.reset();
 }
 
-void ServerSocket::listen(int maxConnectionsCount)
+void TCPServerSocket::listen(int maxConnectionsCount)
 {
 	if (type == Type::Dgram)
 	{
-		throw std::runtime_error(
-			"You can't use function 'listen' with Dgram protocol.");
+		throw std::runtime_error("You can't use function 'listen' with Dgram protocol.");
 	}
 
 	::listen(socketDescriptor, maxConnectionsCount);
 	Wsa::instance().requireNoErrors();
 }
 
-ClientSocket ServerSocket::accept() const
+TCPClientSocket TCPServerSocket::accept() const
 {
 	if (type == Type::Dgram)
 	{
-		throw std::runtime_error(
-			"You can't use function 'accept' with Dgram protocol.");
+		throw std::runtime_error("You can't use function 'accept' with Dgram protocol.");
 	}
 
 	sockaddr_in connectedAddress{};
@@ -58,14 +61,14 @@ ClientSocket ServerSocket::accept() const
 	SOCKET connectedSocket = ::accept(socketDescriptor, reinterpret_cast<sockaddr*>(&connectedAddress), &new_len);
 	Wsa::instance().requireNoErrors();
 
-	ClientSocket clientSocket;
-	ClientSocketBridge clientSocketBridge(clientSocket);
-	clientSocketBridge.fillUp(connectedSocket, connectedAddress, type);
+	TCPClientSocket clientSocket;
+	TCPClientSocketBridge tcpClientSocketBridge(clientSocket);
+	tcpClientSocketBridge.fillUp(connectedSocket, connectedAddress);
 
 	return clientSocket;
 }
 
-bool ServerSocket::isCanAccept() const
+bool TCPServerSocket::isCanAccept() const
 {
 	fd_set fd;
 	u_long nbio = 1;
@@ -76,5 +79,31 @@ bool ServerSocket::isCanAccept() const
 	const auto result = select(0, &fd, nullptr, nullptr, &tv) > 0;
 	nbio = 0;
 	::ioctlsocket(socketDescriptor, FIONBIO, &nbio);
+	return result;
+}
+
+void TCPServerSocket::open(AddressFamily addressFamily, Socket::Protocol protocol)
+{
+	Socket::open(addressFamily, Type::Stream, protocol);
+}
+
+void UDPServerSocket::open(AddressFamily addressFamily, Socket::Protocol protocol)
+{
+	Socket::open(addressFamily, Type::Dgram, protocol);
+}
+
+UDPServerSocket::Result UDPServerSocket::receiveAsString(std::size_t size)
+{
+	Result result;
+	result.data.resize(size);
+	
+	sockaddr_in cliAddr{};
+	int cliAddrLen = sizeof(cliAddr);
+
+	recvfrom(socketDescriptor, result.data.data(), size, 0, (struct sockaddr*) &cliAddr, &cliAddrLen);
+	Wsa::instance().requireNoErrors();
+
+	result.client.fromSockaddrIn(cliAddr);
+
 	return result;
 }

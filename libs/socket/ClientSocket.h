@@ -6,13 +6,13 @@
 #include <optional>
 #include <vector>
 
-class ClientSocket : public Socket
+class TCPClientSocket : public Socket
 {
 public:
-	__declspec(dllexport) ClientSocket();
-	__declspec(dllexport) ClientSocket(AddressFamily addressFamily, Type type, Protocol protocol = Protocol::Auto);
-	__declspec(dllexport) ClientSocket(ClientSocket&& other) noexcept;
-	__declspec(dllexport) ClientSocket& operator=(ClientSocket&& other) noexcept;
+	__declspec(dllexport) TCPClientSocket();
+	__declspec(dllexport) TCPClientSocket(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
+	__declspec(dllexport) TCPClientSocket(TCPClientSocket&& other) noexcept;
+	__declspec(dllexport) TCPClientSocket& operator=(TCPClientSocket&& other) noexcept;
 
 	__declspec(dllexport) void close() override;
 	_NODISCARD __declspec(dllexport) bool isConnected() const;
@@ -23,7 +23,8 @@ public:
 
 	__declspec(dllexport) void send(const std::string& data);
 	__declspec(dllexport) void send(const std::vector<char>& data);
-	__declspec(dllexport) void sendTo(const std::string& data, const SocketAddress& socketAddress);
+
+	__declspec(dllexport) void open(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
 
 	__declspec(dllexport) std::string receiveAsString(std::size_t receiveSize);
 	__declspec(dllexport) std::vector<char> receive(std::size_t receiveSize);
@@ -32,15 +33,26 @@ public:
 private:
 	sockaddr_in connectedAddress;
 	bool isConnected_ = false;
-	friend class ClientSocketBridge;
+	friend class TCPClientSocketBridge;
 };
 
-class ClientSocketBridge
+class TCPClientSocketBridge
 {
 public:
-	__declspec(dllexport) explicit ClientSocketBridge(ClientSocket& clientSocket);
-	__declspec(dllexport) void fillUp(SOCKET socket, const sockaddr_in& address, Socket::Type type);
+	__declspec(dllexport) explicit TCPClientSocketBridge(TCPClientSocket& clientSocket);
+	__declspec(dllexport) void fillUp(SOCKET socket, const sockaddr_in& address);
 
 private:
-	ClientSocket& clientSocket;
+	TCPClientSocket& clientSocket;
+};
+
+class UDPClientSocket : public Socket
+{
+public:
+	__declspec(dllexport) UDPClientSocket() = default;
+	__declspec(dllexport) explicit UDPClientSocket(AddressFamily addressFamily, Protocol protocol = Protocol::Auto);
+	__declspec(dllexport) void sendTo(const std::string& message, const SocketAddress& socketAddress);
+
+private:
+	friend class UDPClientSocketBridge;
 };

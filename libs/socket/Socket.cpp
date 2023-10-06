@@ -68,6 +68,18 @@ Socket::Type Socket::getType() const
 	return type;
 }
 
+SocketAddress Socket::getOwnAddress() const
+{
+	sockaddr_in addr;
+	int addLen = sizeof(addr);
+	::getsockname(socketDescriptor, reinterpret_cast<sockaddr*>(&addr), &addLen);
+	Wsa::instance().requireNoErrors();
+
+	SocketAddress address;
+	address.fromSockaddrIn(addr);
+	return address;
+}
+
 void SocketAddress::setPort(USHORT port)
 {
 	this->port = htons(port);

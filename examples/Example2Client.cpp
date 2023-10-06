@@ -10,10 +10,9 @@ int main()
 	try
 	{
 		Wsa::instance().initialize(1, 1);
-
-		ClientSocket client;
-		client.open(AddressFamily::Inet, Socket::Type::Dgram);
+		UDPClientSocket client(AddressFamily::Inet);
 		client.sendTo("Hello", {"127.0.0.1", 8088});
+		cout << client.getOwnAddress().getAddress() << ":" << client.getOwnAddress().getPort() << endl;
 
 		system("pause");
 	}
